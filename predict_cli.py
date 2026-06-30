@@ -1,48 +1,58 @@
-
+import os
 import pandas as pd
 import joblib
 import argparse
 import sys
 
 # =====================================================
-# Load Saved Model
+# LOAD MODEL (FIXED ABSOLUTE PATH)
 # =====================================================
 
-try:
-    model = joblib.load("5G_PathLoss_Model.pkl")
-except FileNotFoundError:
-    print("Error: Model file '5G_PathLoss_Model.pkl' not found. Please ensure it's in the current directory.")
+model_path = r"C:\Users\Ethnotech\Desktop\ml project\5G_PathLoss_Model.pkl"
+
+if not os.path.exists(model_path):
+    print("Error: Model file not found!")
+    print("Expected path:", model_path)
     sys.exit(1)
 
+model = joblib.load(model_path)
+
+print("Model loaded successfully!")
+print("=" * 60)
+print("        5G PATH LOSS PREDICTION SYSTEM")
+print("=" * 60)
+
 # =====================================================
-# Command Line Argument Parsing
+# ARGUMENT PARSER
 # =====================================================
 
 def parse_args():
     parser = argparse.ArgumentParser(description="5G Path Loss Prediction System")
-    parser.add_argument("--sim_run_num", type=int, required=True, help="Simulation Run Number (int)")
-    parser.add_argument("--distance", type=float, required=True, help="T-R Separation Distance (m) (float)")
-    parser.add_argument("--time_delay", type=int, required=True, help="Time Delay (ns) (int)")
-    parser.add_argument("--received_power", type=float, required=True, help="Received Power (dBm) (float)")
-    parser.add_argument("--phase", type=float, required=True, help="Phase (rad) (float)")
-    parser.add_argument("--azimuth_aod", type=int, required=True, help="Azimuth AoD (degree) (int)")
-    parser.add_argument("--elevation_aod", type=float, required=True, help="Elevation AoD (degree) (float)")
-    parser.add_argument("--azimuth_aoa", type=float, required=True, help="Azimuth AoA (degree) (float)")
-    parser.add_argument("--elevation_aoa", type=int, required=True, help="Elevation AoA (degree) (int)") # Reverted to int based on original df.dtypes
-    parser.add_argument("--rms_delay_spread", type=float, required=True, help="RMS Delay Spread (ns) (float)")
-    parser.add_argument("--season_num", type=int, required=True, help="Season (numerical, e.g., 0 for FallL, 1 for SpringH) (int)")
-    parser.add_argument("--frequency", type=float, required=True, help="Frequency (float)")
-    parser.add_argument("--seasonal_variation", type=str, required=True, help="Seasonal Variation (Data Source) (e.g., FallL, SummerM, WinterH)")
+
+    parser.add_argument("--sim_run_num", type=int, required=True)
+    parser.add_argument("--distance", type=float, required=True)
+    parser.add_argument("--time_delay", type=int, required=True)
+    parser.add_argument("--received_power", type=float, required=True)
+    parser.add_argument("--phase", type=float, required=True)
+    parser.add_argument("--azimuth_aod", type=int, required=True)
+    parser.add_argument("--elevation_aod", type=float, required=True)
+    parser.add_argument("--azimuth_aoa", type=float, required=True)
+    parser.add_argument("--elevation_aoa", type=int, required=True)
+    parser.add_argument("--rms_delay_spread", type=float, required=True)
+    parser.add_argument("--season_num", type=int, required=True)
+    parser.add_argument("--frequency", type=float, required=True)
+    parser.add_argument("--seasonal_variation", type=str, required=True)
+
     return parser.parse_args()
 
+# =====================================================
+# MAIN FUNCTION
+# =====================================================
 
 def main():
     args = parse_args()
 
-    # =====================================================
-    # Create DataFrame from Arguments
-    # =====================================================
-
+    # Create input DataFrame (must match training columns exactly)
     sample = pd.DataFrame({
         "Seasonal Variation (Data Source)": [args.seasonal_variation],
         "Simulation Run Number": [args.sim_run_num],
@@ -60,13 +70,13 @@ def main():
     })
 
     # =====================================================
-    # Prediction
+    # PREDICTION
     # =====================================================
 
     predicted_path_loss = model.predict(sample)[0]
 
     # =====================================================
-    # Classification
+    # SIGNAL QUALITY CLASSIFICATION
     # =====================================================
 
     if predicted_path_loss < 80:
@@ -79,16 +89,19 @@ def main():
         quality = "Poor Signal"
 
     # =====================================================
-    # Output
+    # OUTPUT
     # =====================================================
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Prediction Result")
-    print("="*60)
+    print("=" * 60)
     print(f"Predicted Path Loss : {predicted_path_loss:.2f} dB")
     print(f"Signal Quality      : {quality}")
-    print("="*60)
+    print("=" * 60)
 
+# =====================================================
+# RUN SCRIPT
+# =====================================================
 
 if __name__ == "__main__":
     main()
